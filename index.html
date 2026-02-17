@@ -3,29 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>collect PDF Ruqyah</title>
+    <title>Materi Ruqyah Digital</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- PDF.js library untuk generate thumbnail -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f8fafc;
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
 
         .pdf-card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .pdf-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
         }
 
         .pdf-card:active {
-            transform: scale(0.95);
+            transform: scale(0.97);
         }
 
         .shimmer {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
         }
@@ -34,45 +45,92 @@
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
-        
-        .error-placeholder {
-            background-color: #fee2e2;
-            color: #b91c1c;
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .search-container focus-within {
+            ring: 2px solid #2563eb;
         }
     </style>
 </head>
-<body class="pb-10">
+<body class="min-h-screen">
 
-    <!-- Header -->
-    <header class="bg-white border-b sticky top-0 z-10 px-6 py-4 flex items-center justify-between">
-        <h1 class="text-xl font-800 text-slate-800 tracking-tight">Materi <span class="text-blue-600">Ruqyah</span></h1>
-        <div class="bg-blue-100 p-2 rounded-full">
-            <i class="fa-solid fa-book-open text-blue-600"></i>
+    <!-- Header & Navigation -->
+    <header class="glass-header border-b sticky top-0 z-30 px-6 py-4">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-800 text-slate-900 tracking-tight">Pustaka <span class="text-blue-600">Ruqyah</span></h1>
+                <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-widest">Edukasi Syar'iyyah</p>
+            </div>
+            <div class="bg-blue-600 p-2.5 rounded-2xl shadow-lg shadow-blue-200">
+                <i class="fa-solid fa-book-quran text-white"></i>
+            </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-md mx-auto px-4 mt-6">
+    <main class="max-w-4xl mx-auto px-5 py-8">
         
-        <!-- Welcome Section -->
-        <section class="mb-8">
-            <h2 class="text-2xl font-bold text-slate-900 leading-tight">Selamat Datang!</h2>
-            <p class="text-slate-500 text-sm mt-1">Halaman pertama PDF akan otomatis muncul sebagai pratinjau.</p>
+        <!-- Welcome & Search -->
+        <section class="mb-10 text-center md:text-left">
+            <h2 class="text-3xl font-800 text-slate-900 mb-2 leading-tight">Materi Belajar Ruqyah</h2>
+            <p class="text-slate-500 mb-8">Temukan panduan, doa, dan artikel seputar ruqyah mandiri.</p>
+            
+            <!-- Search Bar -->
+            <div class="relative max-w-2xl">
+                <input type="text" id="searchInput" placeholder="Cari judul materi..." 
+                    class="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+            </div>
         </section>
 
+        <!-- Stats Brief -->
+        <div class="flex gap-4 mb-8 overflow-x-auto pb-2 no-scrollbar">
+            <div class="bg-white px-4 py-2 rounded-xl border border-slate-100 flex items-center gap-2 whitespace-nowrap">
+                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                <span id="docCount" class="text-sm font-bold text-slate-700">0 Materi</span>
+            </div>
+            <div class="bg-white px-4 py-2 rounded-xl border border-slate-100 flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-check-double text-blue-500 text-xs"></i>
+                <span class="text-sm font-medium text-slate-600">Terverifikasi Syariat</span>
+            </div>
+        </div>
+
         <!-- Grid Katalog -->
-        <div id="catalog-grid" class="grid grid-cols-1 gap-6">
+        <div id="catalog-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Data akan dimuat oleh JavaScript -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden py-20 text-center">
+            <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-box-open text-slate-400 text-xl"></i>
+            </div>
+            <p class="text-slate-500 font-medium">Materi tidak ditemukan...</p>
         </div>
 
     </main>
 
+    <!-- Footer Content Info -->
+    <footer class="text-center py-10 opacity-50">
+        <p class="text-xs font-medium text-slate-400">© 2024 Pustaka Ruqyah Digital</p>
+    </footer>
+
     <script>
-        // Konfigurasi PDF.js worker
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-        // DATA PDF (Cukup masukkan link PDF saja)
-        // Gunakan link yang mendukung CORS. Link GitHub Raw biasanya mendukung.
         const pdfData = [
           { id: 1, title: "Keutamaan Bulan-bulan Haram", pdfUrl: "assets/Keutamaan Bulan-bulan Haram.pdf" },
           { id: 2, title: "Hakikat sihir", pdfUrl: "assets/Hakikat sihir.pdf" },
@@ -130,13 +188,12 @@
           { id: 54, title: "Mengatasi Sihir Tingkat Lanjut", pdfUrl: "assets/Mengatasi Sihir Tingkat Lanjut.pdf" },
           { id: 55, title: "Munkirot al-Insan fiimaa Yusallithu al-Jinn wa asy-Syaithon", pdfUrl: "assets/Munkirot al-Insan fiimaa Yusallithu al-Jinn wa asy-Syaithon.pdf" }
         ];
-        
+
         async function generateThumbnail(pdfUrl, canvasId) {
             const canvas = document.getElementById(canvasId);
             const container = canvas.parentElement;
 
             try {
-                // Menambahkan parameter untuk mencoba menghindari blokir CORS sederhana
                 const loadingTask = pdfjsLib.getDocument({
                     url: pdfUrl,
                     disableAutoFetch: true,
@@ -146,69 +203,86 @@
                 const pdf = await loadingTask.promise;
                 const page = await pdf.getPage(1);
                 
-                const viewport = page.getViewport({ scale: 0.6 });
+                const viewport = page.getViewport({ scale: 0.5 });
                 const context = canvas.getContext('2d');
                 
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
 
-                const renderContext = {
-                    canvasContext: context,
-                    viewport: viewport
-                };
-                
+                const renderContext = { canvasContext: context, viewport: viewport };
                 await page.render(renderContext).promise;
+                
                 container.classList.remove('shimmer');
+                canvas.style.opacity = "1";
             } catch (error) {
-                console.error("Gagal generate thumbnail:", error);
+                console.error("Gagal load:", error);
                 container.classList.remove('shimmer');
-                container.classList.add('error-placeholder');
                 container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full text-center px-4">
-                        <i class="fa-solid fa-circle-exclamation text-3xl mb-2"></i>
-                        <span class="text-[10px] font-bold uppercase">CORS / Network Error</span>
-                        <p class="text-[9px] mt-1">Server storage Anda memblokir pratinjau otomatis.</p>
+                    <div class="flex flex-col items-center justify-center h-full text-slate-300">
+                        <i class="fa-solid fa-file-pdf text-4xl mb-2"></i>
+                        <span class="text-[10px] uppercase font-bold tracking-widest">PDF Ready</span>
                     </div>
                 `;
             }
         }
 
-        function renderCatalog() {
+        function renderCatalog(filter = "") {
             const grid = document.getElementById('catalog-grid');
-            grid.innerHTML = pdfData.map(item => `
-                <div class="pdf-card bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden cursor-pointer" onclick="openPdf('${item.pdfUrl}')">
-                    <div class="relative h-56 bg-slate-100 shimmer flex items-center justify-center overflow-hidden">
-                        <canvas id="thumb-${item.id}" class="w-full h-full object-cover"></canvas>
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-                        <div class="absolute top-4 right-4">
-                            <div class="bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow-sm border border-white/20">
-                                <span class="text-[10px] font-bold text-blue-600">HALAMAN 1</span>
-                            </div>
+            const emptyState = document.getElementById('emptyState');
+            const docCount = document.getElementById('docCount');
+            
+            const filteredData = pdfData.filter(item => 
+                item.title.toLowerCase().includes(filter.toLowerCase())
+            );
+
+            docCount.innerText = `${filteredData.length} Materi`;
+
+            if (filteredData.length === 0) {
+                grid.innerHTML = "";
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filteredData.map(item => `
+                <div class="pdf-card bg-white rounded-[2rem] border border-slate-100 overflow-hidden cursor-pointer flex flex-col" onclick="openPdf('${item.pdfUrl}')">
+                    <div class="relative h-44 bg-slate-100 shimmer overflow-hidden">
+                        <canvas id="thumb-${item.id}" class="w-full h-full object-cover opacity-0 transition-opacity duration-500"></canvas>
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent"></div>
+                        <div class="absolute bottom-4 left-4">
+                            <span class="bg-blue-600 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">Halaman Utama</span>
                         </div>
                     </div>
-                    <div class="p-5 flex justify-between items-center">
-                        <div class="flex-1 pr-4">
-                            <h3 class="text-lg font-bold text-slate-800 line-clamp-1">${item.title}</h3>
-                            <p class="text-sm text-slate-500 mt-1">${item.description}</p>
+                    <div class="p-6 flex items-start gap-4">
+                        <div class="flex-1">
+                            <h3 class="text-base font-bold text-slate-800 leading-snug line-clamp-2">${item.title}</h3>
+                            <div class="flex items-center gap-2 mt-3">
+                                <div class="bg-slate-100 px-2 py-1 rounded text-[10px] font-bold text-slate-500 uppercase">Syariat</div>
+                                <div class="text-[10px] text-slate-400 font-medium italic">Klik untuk membaca</div>
+                            </div>
                         </div>
-                        <div class="bg-blue-600 w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
-                            <i class="fa-solid fa-eye text-sm"></i>
+                        <div class="bg-blue-50 w-10 h-10 rounded-2xl flex items-center justify-center text-blue-600 flex-shrink-0">
+                            <i class="fa-solid fa-arrow-right-long"></i>
                         </div>
                     </div>
                 </div>
             `).join('');
 
-            pdfData.forEach(item => {
+            filteredData.forEach(item => {
                 generateThumbnail(item.pdfUrl, `thumb-${item.id}`);
             });
         }
 
         function openPdf(url) {
-            // Membuka di tab baru seringkali menghindari masalah CORS browser untuk viewing
             window.open(url, '_blank');
         }
 
-        window.onload = renderCatalog;
+        // Search Logic
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            renderCatalog(e.target.value);
+        });
+
+        window.onload = () => renderCatalog();
     </script>
 </body>
 </html>
