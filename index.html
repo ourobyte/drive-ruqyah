@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Katalog PDF Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- PDF.js library untuk generate thumbnail -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .pdf-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .pdf-card:active {
+            transform: scale(0.95);
+        }
+
+        .shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .error-placeholder {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+    </style>
+</head>
+<body class="pb-10">
+
+    <!-- Header -->
+    <header class="bg-white border-b sticky top-0 z-10 px-6 py-4 flex items-center justify-between">
+        <h1 class="text-xl font-800 text-slate-800 tracking-tight">Koleksi <span class="text-blue-600">Digital</span></h1>
+        <div class="bg-blue-100 p-2 rounded-full">
+            <i class="fa-solid fa-book-open text-blue-600"></i>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-md mx-auto px-4 mt-6">
+        
+        <!-- Welcome Section -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-slate-900 leading-tight">Selamat Datang!</h2>
+            <p class="text-slate-500 text-sm mt-1">Halaman pertama PDF akan otomatis muncul sebagai pratinjau.</p>
+        </section>
+
+        <!-- Grid Katalog -->
+        <div id="catalog-grid" class="grid grid-cols-1 gap-6">
+            <!-- Data akan dimuat oleh JavaScript -->
+        </div>
+
+    </main>
+
+    <script>
+        // Konfigurasi PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // DATA PDF (Cukup masukkan link PDF saja)
+        // Gunakan link yang mendukung CORS. Link GitHub Raw biasanya mendukung.
+        const pdfData = [
+            {
+                id: 1,
+                title: "Panduan Pengguna V.1",
+                description: "Edisi Lengkap Tahun 2024",
+                pdfUrl: "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf"
+            },
+            {
+                id: 2,
+                title: "Contoh Laporan",
+                description: "Statistik Pertumbuhan",
+                pdfUrl: "https://raw.githubusercontent.com/mozilla/pdf.js/master/web/compressed.tracemonkey-pldi-09.pdf"
+            },
+            {
+                id: 3,
+                title: "Dokumen Teknis",
+                description: "Spesifikasi dan Fitur",
+                pdfUrl: "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/complex_layers.pdf"
+            }
+        ];
+
+        async function generateThumbnail(pdfUrl, canvasId) {
+            const canvas = document.getElementById(canvasId);
+            const container = canvas.parentElement;
+
+            try {
+                // Menambahkan parameter untuk mencoba menghindari blokir CORS sederhana
+                const loadingTask = pdfjsLib.getDocument({
+                    url: pdfUrl,
+                    disableAutoFetch: true,
+                    disableStream: true
+                });
+
+                const pdf = await loadingTask.promise;
+                const page = await pdf.getPage(1);
+                
+                const viewport = page.getViewport({ scale: 0.6 });
+                const context = canvas.getContext('2d');
+                
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                await page.render(renderContext).promise;
+                container.classList.remove('shimmer');
+            } catch (error) {
+                console.error("Gagal generate thumbnail:", error);
+                container.classList.remove('shimmer');
+                container.classList.add('error-placeholder');
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-center px-4">
+                        <i class="fa-solid fa-circle-exclamation text-3xl mb-2"></i>
+                        <span class="text-[10px] font-bold uppercase">CORS / Network Error</span>
+                        <p class="text-[9px] mt-1">Server storage Anda memblokir pratinjau otomatis.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderCatalog() {
+            const grid = document.getElementById('catalog-grid');
+            grid.innerHTML = pdfData.map(item => `
+                <div class="pdf-card bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden cursor-pointer" onclick="openPdf('${item.pdfUrl}')">
+                    <div class="relative h-56 bg-slate-100 shimmer flex items-center justify-center overflow-hidden">
+                        <canvas id="thumb-${item.id}" class="w-full h-full object-cover"></canvas>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                        <div class="absolute top-4 right-4">
+                            <div class="bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow-sm border border-white/20">
+                                <span class="text-[10px] font-bold text-blue-600">HALAMAN 1</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-5 flex justify-between items-center">
+                        <div class="flex-1 pr-4">
+                            <h3 class="text-lg font-bold text-slate-800 line-clamp-1">${item.title}</h3>
+                            <p class="text-sm text-slate-500 mt-1">${item.description}</p>
+                        </div>
+                        <div class="bg-blue-600 w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                            <i class="fa-solid fa-eye text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            pdfData.forEach(item => {
+                generateThumbnail(item.pdfUrl, `thumb-${item.id}`);
+            });
+        }
+
+        function openPdf(url) {
+            // Membuka di tab baru seringkali menghindari masalah CORS browser untuk viewing
+            window.open(url, '_blank');
+        }
+
+        window.onload = renderCatalog;
+    </script>
+</body>
+</html>
