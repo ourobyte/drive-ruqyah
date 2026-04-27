@@ -1,0 +1,25 @@
+[
+  {
+    "nama": "Musyafa",
+    "token": "admingmi0"
+  },
+  {
+    "nama": "Risno",
+    "token": "admingmi1"
+  },
+  {
+    "nama": "Dewi Mardhotilah",
+    "token": "admingmi2"
+  },
+  {
+    "nama": "Ida Ayu",
+    "token": "admingmi3"
+  }
+]
+
+### Penjelasan Sistem Keamanan yang Diterapkan:
+1. **Fetch & Authentikasi:** Website memanggil `data.json` dan memverifikasi dari input user. Jika berhasil, data user disimpan sementara di `sessionStorage` (sehingga jika mereka refresh halaman tidak perlu login lagi). File PDF dari GitHub tidak akan diproses (di-fetch) sebelum user berhasil Login.
+2. **Custom Render Engine (PDF.js):** Alih-alih merujuk file PDF ke browser (dimana browser selalu memberikan tombol *Download*), dokumen Anda secara paksa "digambar" ulang (dirender) di atas komponen kanvas HTML5, halaman-demi-halaman. Bagi user, tampilannya persis membaca PDF normal (lengkap dengan navigasi Next/Prev).
+3. **Mencegah Save As & Klik Kanan:** Fitur klik kanan seluruh halaman telah dimatikan (`oncontextmenu="return false"`), ini membuat user tidak bisa dengan mudah melakukan *Save Image As...* pada kanvas.
+4. **Mencegah Ctrl+S / Ctrl+P:** Fungsi keybind JavaScript ditambahkan untuk mendeteksi apabila user mencoba shortcut print atau save di keyboard dan memblokirnya.
+5. **Hide Print CSS:** Jika mereka entah bagaimana memaksakan klik Print lewat menu bar Chrome, CSS khusus `@media print { body { display: none !important; } }` akan membuat lembar print menjadi halaman kosong blank putih total.
